@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Check out source code from private repo
+        uses: actions/checkout@v4
+        with:
+          repository: donsolly/kexpose-dev
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build ARM64
+        run: |
+          GOOS=darwin GOARCH=arm64 go build \
+            -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
+                      -X main.commit=$(git rev-parse HEAD) \
+                      -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o kexpose-darwin-arm64 \
+            ./cmd/kexpose
+
+      - name: Build AMD64
+        run: |
+          GOOS=darwin GOARCH=amd64 go build \
+            -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
+                      -X main.commit=$(git rev-parse HEAD) \
+                      -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o kexpose-darwin-amd64 \
+            ./cmd/kexpose
+
+      - name: Create archives
+        run: |
+          cp kexpose-darwin-arm64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz kexpose && rm kexpose
+          cp kexpose-darwin-amd64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz kexpose && rm kexpose
+
+      - name: Generate checksums
+        run: |
+          shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz.sha256
+          shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz.sha256
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz
+            kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz
+            kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz.sha256
+            kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz.sha256
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Check out tap repository
+        uses: actions/checkout@v4
+
+      - name: Update Homebrew Formula
+        uses: Justintime50/homebrew-releaser@v2
+        with:
+          homebrew_owner: donsolly
+          homebrew_tap: homebrew-kexpose
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          formula_folder: Formula
+          target_darwin_amd64: true
+          target_darwin_arm64: true
+          install: 'bin.install "kexpose"'
+          test: 'assert_match version.to_s, shell_output("#{bin}/kexpose --version")'
+          update_readme_table: false
+          commit_owner: homebrew-releaser
+          commit_email: homebrew-releaser@users.noreply.github.com
