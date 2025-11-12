@@ -5,8 +5,8 @@
 class HomebrewKexpose < Formula
   desc "Macos-focused terminal ui (tui) application for discovering kubernetes service"
   homepage "https://github.com/donsolly/homebrew-kexpose"
-  url "https://github.com/donsolly/homebrew-kexpose/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "2bf518d6e737b5aa4061581448c6d0f8838bd269ecc3d28f7b4061f8fc943d19"
+  url "https://github.com/donsolly/homebrew-kexpose/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 "c989c3b7add36e07826ce69e9a7c872f1600cad1ea2497d7a9ff0201c9c4b00c"
 
   on_macos do
   end
