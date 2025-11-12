@@ -17,7 +17,7 @@ Official Homebrew tap for [kexpose](https://github.com/donsolly/kexpose), a Kube
 ## Installation
 
 ```bash
-brew tap donsolly/kexpose
+brew tap donsolly/homebrew-kexpose
 brew install kexpose
 ```
 
