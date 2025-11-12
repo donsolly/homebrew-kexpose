@@ -3,7 +3,7 @@
 
 class Kexpose < Formula
   desc "Kubernetes port-forward manager with TUI"
-  homepage "https://github.com/donsolly/kexpose"
+  homepage "https://github.com/donsolly/homebrew-kexpose"
   version "0.1.0"
   license "MIT"
 
