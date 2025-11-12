@@ -1,5 +1,5 @@
-# This file will be automatically updated by homebrew-releaser
-# Place this in your homebrew-kexpose tap repository under Formula/kexpose.rb
+# This file is automatically updated by the release workflow
+# DO NOT manually edit version, url, or sha256 fields - they will be overwritten
 
 class Kexpose < Formula
   desc "Kubernetes port-forward manager with TUI"
