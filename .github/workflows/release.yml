@@ -81,7 +81,47 @@ jobs:
       - name: Check out tap repository
         uses: actions/checkout@v4
 
-      - name: Update Homebrew Formula
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.release.outputs.version }}"
+          gh release download "$VERSION" \
+            --pattern "*.sha256" \
+            --repo donsolly/homebrew-kexpose
+
+      - name: Update kexpose.rb formula
+        run: |
+          VERSION="${{ needs.release.outputs.version }}"
+          VERSION_NUM="${VERSION#v}"  # Remove 'v' prefix
+
+          # Read SHA256 checksums
+          ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-arm64.tar.gz.sha256)
+          AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-amd64.tar.gz.sha256)
+
+          # Update the formula file
+          sed -i "s/version \".*\"/version \"$VERSION_NUM\"/" Formula/kexpose.rb
+          sed -i "s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-arm64.tar.gz\"|" Formula/kexpose.rb
+          sed -i "s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-amd64.tar.gz\"|" Formula/kexpose.rb
+
+          # Update SHA256 for ARM64 (line after arm64 url)
+          sed -i "/darwin-arm64.tar.gz\"/{ n; s/sha256 \".*\"/sha256 \"$ARM64_SHA\"/; }" Formula/kexpose.rb
+
+          # Update SHA256 for AMD64 (line after amd64 url)
+          sed -i "/darwin-amd64.tar.gz\"/{ n; s/sha256 \".*\"/sha256 \"$AMD64_SHA\"/; }" Formula/kexpose.rb
+
+          echo "Updated Formula/kexpose.rb with version $VERSION_NUM"
+          cat Formula/kexpose.rb
+
+      - name: Commit and push formula updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/kexpose.rb
+          git commit -m "chore: update kexpose.rb formula to ${{ needs.release.outputs.version }}" || echo "No changes to commit"
+          git push
+
+      - name: Update Homebrew Formula (homebrew-kexpose.rb)
         uses: Justintime50/homebrew-releaser@v2
         with:
           homebrew_owner: donsolly
