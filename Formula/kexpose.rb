@@ -9,26 +9,18 @@ class Kexpose < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/donsolly/kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-arm64.tar.gz"
-      sha256 "REPLACE_WITH_ARM64_SHA256"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-arm64.tar.gz"
+      sha256 "4c5b0b6d11de81516946cbb5d09e1e3aa54e0e7005a719b431323d155c8da0b6"
     else
-      url "https://github.com/donsolly/kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-amd64.tar.gz"
-      sha256 "REPLACE_WITH_AMD64_SHA256"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-amd64.tar.gz"
+      sha256 "8dbb65ed0cda0776e1185419e0a3df88fbdc53c9476ace86ce36e746a403a405"
     end
   end
 
   depends_on :macos
 
   def install
-    if Hardware::CPU.arm?
-      bin.install "kexpose-darwin-arm64" => "kexpose"
-    else
-      bin.install "kexpose-darwin-amd64" => "kexpose"
-    end
-
-    # Generate shell completions if available
-    # Uncomment if kexpose supports completion command:
-    # generate_completions_from_executable(bin/"kexpose", "completion")
+    bin.install "kexpose"
   end
 
   def caveats
