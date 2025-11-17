@@ -108,6 +108,9 @@ jobs:
     steps:
       - name: Check out tap repository
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Download release assets
         env:
@@ -177,7 +180,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/kexpose.rb
           git commit -m "chore: update kexpose.rb formula to ${{ needs.release.outputs.version }}" || echo "No changes to commit"
-          git push
+          git push origin main
 
       - name: Update Homebrew Formula (homebrew-kexpose.rb)
         uses: Justintime50/homebrew-releaser@v2
