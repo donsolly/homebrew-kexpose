@@ -181,20 +181,3 @@ jobs:
           git add Formula/kexpose.rb
           git commit -m "chore: update kexpose.rb formula to ${{ needs.release.outputs.version }}" || echo "No changes to commit"
           git push origin main
-
-      - name: Update Homebrew Formula (homebrew-kexpose.rb)
-        uses: Justintime50/homebrew-releaser@v2
-        with:
-          homebrew_owner: donsolly
-          homebrew_tap: homebrew-kexpose
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          formula_folder: Formula
-          target_darwin_amd64: true
-          target_darwin_arm64: true
-          target_linux_amd64: true
-          target_linux_arm64: true
-          install: 'bin.install "kexpose"'
-          test: 'assert_match version.to_s, shell_output("#{bin}/kexpose --version")'
-          update_readme_table: false
-          commit_owner: homebrew-releaser
-          commit_email: homebrew-releaser@users.noreply.github.com
