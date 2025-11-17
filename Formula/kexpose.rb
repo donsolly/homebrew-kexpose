@@ -10,20 +10,20 @@ class Kexpose < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-arm64.tar.gz"
-      sha256 "4c5b0b6d11de81516946cbb5d09e1e3aa54e0e7005a719b431323d155c8da0b6"
+      sha256 "d75027c74c084f27cdee9bd5dc955ee99108d28f4507e4082f81d8fab2b73d31"
     else
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-amd64.tar.gz"
-      sha256 "8dbb65ed0cda0776e1185419e0a3df88fbdc53c9476ace86ce36e746a403a405"
+      sha256 "83ee5cf52ab26a8006f4ad2ac2ce1f4f722d013c751ffacd67c08df47dcdef23"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-arm64.tar.gz"
-      sha256 "PLACEHOLDER_LINUX_ARM64_SHA256"
+      sha256 "6b43954519ab98e32bbbbb12ca111def2927faa5f763b4cc9dfae8fb3bfdb3d4"
     else
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-amd64.tar.gz"
-      sha256 "PLACEHOLDER_LINUX_AMD64_SHA256"
+      sha256 "6b43954519ab98e32bbbbb12ca111def2927faa5f763b4cc9dfae8fb3bfdb3d4"
     end
   end
 
