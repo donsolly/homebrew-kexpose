@@ -31,7 +31,7 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Build ARM64
+      - name: Build Darwin ARM64
         run: |
           GOOS=darwin GOARCH=arm64 go build \
             -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
@@ -40,7 +40,7 @@ jobs:
             -o kexpose-darwin-arm64 \
             ./cmd/kexpose
 
-      - name: Build AMD64
+      - name: Build Darwin AMD64
         run: |
           GOOS=darwin GOARCH=amd64 go build \
             -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
@@ -49,15 +49,39 @@ jobs:
             -o kexpose-darwin-amd64 \
             ./cmd/kexpose
 
+      - name: Build Linux AMD64
+        run: |
+          GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
+                      -X main.commit=$(git rev-parse HEAD) \
+                      -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o kexpose-linux-amd64 \
+            ./cmd/kexpose
+
+      - name: Build Linux ARM64
+        run: |
+          GOOS=linux GOARCH=arm64 go build \
+            -ldflags "-X main.version=${{ steps.version.outputs.VERSION }} \
+                      -X main.commit=$(git rev-parse HEAD) \
+                      -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o kexpose-linux-arm64 \
+            ./cmd/kexpose
+
       - name: Create archives
         run: |
+          # macOS archives
           cp kexpose-darwin-arm64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz kexpose && rm kexpose
           cp kexpose-darwin-amd64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz kexpose && rm kexpose
+          # Linux archives
+          cp kexpose-linux-amd64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz kexpose && rm kexpose
+          cp kexpose-linux-arm64 kexpose && tar czf kexpose-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz kexpose && rm kexpose
 
       - name: Generate checksums
         run: |
           shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz.sha256
           shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz.sha256
+          shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz.sha256
+          shasum -a 256 kexpose-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz > kexpose-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz.sha256
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -65,8 +89,12 @@ jobs:
           files: |
             kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz
             kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz
+            kexpose-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz
+            kexpose-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz
             kexpose-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz.sha256
             kexpose-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz.sha256
+            kexpose-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz.sha256
+            kexpose-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz.sha256
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -96,19 +124,49 @@ jobs:
           VERSION_NUM="${VERSION#v}"  # Remove 'v' prefix
 
           # Read SHA256 checksums
-          ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-arm64.tar.gz.sha256)
-          AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-amd64.tar.gz.sha256)
+          DARWIN_ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-arm64.tar.gz.sha256)
+          DARWIN_AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-amd64.tar.gz.sha256)
+          LINUX_AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-linux-amd64.tar.gz.sha256)
+          LINUX_ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-linux-arm64.tar.gz.sha256)
 
-          # Update the formula file
+          # Update version
           sed -i "s/version \".*\"/version \"$VERSION_NUM\"/" Formula/kexpose.rb
-          sed -i "s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-arm64.tar.gz\"|" Formula/kexpose.rb
-          sed -i "s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-amd64.tar.gz\"|" Formula/kexpose.rb
 
-          # Update SHA256 for ARM64 (line after arm64 url)
-          sed -i "/darwin-arm64.tar.gz\"/{ n; s/sha256 \".*\"/sha256 \"$ARM64_SHA\"/; }" Formula/kexpose.rb
+          # Update macOS ARM64 URL and SHA
+          sed -i "/on_macos do/,/end/ {
+            /if Hardware::CPU.arm?/,/end/ {
+              s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-arm64.tar.gz\"|
+              s/sha256 \".*\"/sha256 \"$DARWIN_ARM64_SHA\"/
+            }
+          }" Formula/kexpose.rb
 
-          # Update SHA256 for AMD64 (line after amd64 url)
-          sed -i "/darwin-amd64.tar.gz\"/{ n; s/sha256 \".*\"/sha256 \"$AMD64_SHA\"/; }" Formula/kexpose.rb
+          # Update macOS AMD64 URL and SHA
+          sed -i "/on_macos do/,/end/ {
+            /else/,/end/ {
+              s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-amd64.tar.gz\"|
+              s/sha256 \".*\"/sha256 \"$DARWIN_AMD64_SHA\"/
+            }
+          }" Formula/kexpose.rb
+
+          # Update Linux AMD64 URL and SHA
+          sed -i "/on_linux do/,/end/ {
+            /if Hardware::CPU.arm?/,/else/ {
+              /else/! {
+                s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-linux-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-amd64.tar.gz\"|
+                s/sha256 \".*\"/sha256 \"$LINUX_AMD64_SHA\"/
+              }
+            }
+          }" Formula/kexpose.rb
+
+          # Update Linux ARM64 URL and SHA
+          sed -i "/on_linux do/,/end/ {
+            /if Hardware::CPU.arm?/,/end/ {
+              /if Hardware::CPU.arm?/! {
+                s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-linux-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-arm64.tar.gz\"|
+                s/sha256 \".*\"/sha256 \"$LINUX_ARM64_SHA\"/
+              }
+            }
+          }" Formula/kexpose.rb
 
           echo "Updated Formula/kexpose.rb with version $VERSION_NUM"
           cat Formula/kexpose.rb
@@ -130,6 +188,8 @@ jobs:
           formula_folder: Formula
           target_darwin_amd64: true
           target_darwin_arm64: true
+          target_linux_amd64: true
+          target_linux_arm64: true
           install: 'bin.install "kexpose"'
           test: 'assert_match version.to_s, shell_output("#{bin}/kexpose --version")'
           update_readme_table: false

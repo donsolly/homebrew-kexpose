@@ -21,6 +21,12 @@ brew tap donsolly/homebrew-kexpose
 brew install kexpose
 ```
 
+### Universal installer (macOS/Linux)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/donsolly/homebrew-kexpose/main/scripts/install-linux.sh | bash
+```
+
 After installation:
 
 ```bash

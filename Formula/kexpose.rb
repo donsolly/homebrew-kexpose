@@ -2,7 +2,7 @@
 # DO NOT manually edit version, url, or sha256 fields - they will be overwritten
 
 class Kexpose < Formula
-  desc "Kubernetes port-forward manager with TUI"
+  desc "Cross-platform Kubernetes port-forward manager with TUI"
   homepage "https://github.com/donsolly/homebrew-kexpose"
   version "0.1.0"
   license "MIT"
@@ -17,7 +17,17 @@ class Kexpose < Formula
     end
   end
 
-  depends_on :macos
+  on_linux do
+    if Hardware::CPU.arm?
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-arm64.tar.gz"
+      sha256 "PLACEHOLDER_LINUX_ARM64_SHA256"
+    else
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-amd64.tar.gz"
+      sha256 "PLACEHOLDER_LINUX_AMD64_SHA256"
+    end
+  end
+
+  depends_on "lsof" if OS.linux?
 
   def install
     bin.install "kexpose"
@@ -27,7 +37,9 @@ class Kexpose < Formula
     <<~EOS
       kexpose requires:
       - Access to a Kubernetes cluster with valid kubeconfig
-      - lsof (included in macOS) for port scanning
+      - lsof for port scanning
+        macOS: pre-installed
+        Linux: install with your package manager (apt install lsof, yum install lsof, etc.)
 
       Run 'kexpose doctor' to check your system configuration.
 
