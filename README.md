@@ -39,9 +39,6 @@ kubectl port-forward svc/database 5432:5432
 
 **kexpose** is a cross-platform TUI (Terminal User Interface) that gives you complete control over your Kubernetes port forwards in a single, beautiful interface.
 
-<!-- Screenshot: Main TUI interface showing the browse pane and active forwards -->
-*[Screenshot: Full TUI showing services on the left, active forwards on the right]*
-
 ### What Makes kexpose Different
 
 ✨ **Visual Dashboard** - See all your port forwards at a glance
