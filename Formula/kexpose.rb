@@ -4,26 +4,26 @@
 class Kexpose < Formula
   desc "Cross-platform Kubernetes port-forward manager with TUI"
   homepage "https://github.com/donsolly/homebrew-kexpose"
-  version "0.1.0"
+  version "0.1.1"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-arm64.tar.gz"
-      sha256 "a5a7b1ee540159cb2d8adef4013f9e2022fff87f8e7790cf22dbc0d1d6bd6068"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.1/kexpose-v0.1.1-darwin-arm64.tar.gz"
+      sha256 "a82814ac885b223604820a888190b89ff16dc5a15602f68d6cbdaa1be702b85f"
     else
-      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-darwin-amd64.tar.gz"
-      sha256 "eb6294ac231d07f661df221280c4bf016af54c142585000df829abf912fc9434"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.1/kexpose-v0.1.1-darwin-amd64.tar.gz"
+      sha256 "50a40d7b365d6d4f5cc58636e57702586091583d8113b500d9560e1b7f3125d3"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-arm64.tar.gz"
-      sha256 "b566d84543d40e25b15c248f32422b2769b2e62c17dae3e2759f4cea94dca3e1"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.1/kexpose-v0.1.1-linux-arm64.tar.gz"
+      sha256 "e79525a0254fc0a9122039a88014a4b4cf57a1c393346338feea5003dc882cb7"
     else
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-amd64.tar.gz"
-      sha256 "b566d84543d40e25b15c248f32422b2769b2e62c17dae3e2759f4cea94dca3e1"
+      sha256 "e79525a0254fc0a9122039a88014a4b4cf57a1c393346338feea5003dc882cb7"
     end
   end
 
