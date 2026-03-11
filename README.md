@@ -354,6 +354,22 @@ brew update && brew upgrade kexpose
 
 Homebrew automatically keeps kexpose up to date with the latest releases.
 
+If `brew upgrade kexpose` still reports an older version like `0.1.0 already installed`, refresh the local tap checkout and try again:
+
+```bash
+cd "$(brew --repo donsolly/kexpose)"
+git pull --ff-only
+brew upgrade kexpose
+```
+
+If the tap is heavily out of sync, re-add it:
+
+```bash
+brew untap donsolly/kexpose
+brew tap donsolly/homebrew-kexpose
+brew upgrade kexpose
+```
+
 ### Universal Installer (Linux)
 
 Re-run the installer:
