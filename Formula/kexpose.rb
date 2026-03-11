@@ -22,8 +22,8 @@ class Kexpose < Formula
       url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.1/kexpose-v0.1.1-linux-arm64.tar.gz"
       sha256 "e79525a0254fc0a9122039a88014a4b4cf57a1c393346338feea5003dc882cb7"
     else
-      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.0/kexpose-v0.1.0-linux-amd64.tar.gz"
-      sha256 "e79525a0254fc0a9122039a88014a4b4cf57a1c393346338feea5003dc882cb7"
+      url "https://github.com/donsolly/homebrew-kexpose/releases/download/v0.1.1/kexpose-v0.1.1-linux-amd64.tar.gz"
+      sha256 "a8ec910eecfc4a0c1db9bccb558c71df8bea64b1d0df9234c155e29a6e70377c"
     end
   end
 
@@ -49,10 +49,7 @@ class Kexpose < Formula
   end
 
   test do
-    # Test version command
     assert_match version.to_s, shell_output("#{bin}/kexpose --version")
-
-    # Test doctor command (will fail without kubeconfig, but validates binary works)
     system "#{bin}/kexpose", "doctor"
   end
 end
