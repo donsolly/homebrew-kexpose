@@ -121,55 +121,73 @@ jobs:
             --pattern "*.sha256" \
             --repo donsolly/homebrew-kexpose
 
-      - name: Update kexpose.rb formula
+      - name: Render kexpose formula
         run: |
           VERSION="${{ needs.release.outputs.version }}"
-          VERSION_NUM="${VERSION#v}"  # Remove 'v' prefix
+          VERSION_NUM="${VERSION#v}"
 
-          # Read SHA256 checksums
           DARWIN_ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-arm64.tar.gz.sha256)
           DARWIN_AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-darwin-amd64.tar.gz.sha256)
           LINUX_AMD64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-linux-amd64.tar.gz.sha256)
           LINUX_ARM64_SHA=$(cut -d ' ' -f 1 kexpose-${VERSION}-linux-arm64.tar.gz.sha256)
 
-          # Update version
-          sed -i "s/version \".*\"/version \"$VERSION_NUM\"/" Formula/kexpose.rb
+          cat > Formula/kexpose.rb <<EOF
+          # This file is automatically updated by the release workflow
+          # DO NOT manually edit version, url, or sha256 fields - they will be overwritten
 
-          # Update macOS ARM64 URL and SHA
-          sed -i "/on_macos do/,/end/ {
-            /if Hardware::CPU.arm?/,/end/ {
-              s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-arm64.tar.gz\"|
-              s/sha256 \".*\"/sha256 \"$DARWIN_ARM64_SHA\"/
-            }
-          }" Formula/kexpose.rb
+          class Kexpose < Formula
+            desc "Cross-platform Kubernetes port-forward manager with TUI"
+            homepage "https://github.com/donsolly/homebrew-kexpose"
+            version "$VERSION_NUM"
+            license "MIT"
 
-          # Update macOS AMD64 URL and SHA
-          sed -i "/on_macos do/,/end/ {
-            /else/,/end/ {
-              s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-darwin-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-amd64.tar.gz\"|
-              s/sha256 \".*\"/sha256 \"$DARWIN_AMD64_SHA\"/
-            }
-          }" Formula/kexpose.rb
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-arm64.tar.gz"
+                sha256 "$DARWIN_ARM64_SHA"
+              else
+                url "https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-darwin-amd64.tar.gz"
+                sha256 "$DARWIN_AMD64_SHA"
+              end
+            end
 
-          # Update Linux AMD64 URL and SHA
-          sed -i "/on_linux do/,/end/ {
-            /if Hardware::CPU.arm?/,/else/ {
-              /else/! {
-                s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-linux-amd64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-amd64.tar.gz\"|
-                s/sha256 \".*\"/sha256 \"$LINUX_AMD64_SHA\"/
-              }
-            }
-          }" Formula/kexpose.rb
+            on_linux do
+              if Hardware::CPU.arm?
+                url "https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-arm64.tar.gz"
+                sha256 "$LINUX_ARM64_SHA"
+              else
+                url "https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-amd64.tar.gz"
+                sha256 "$LINUX_AMD64_SHA"
+              end
+            end
 
-          # Update Linux ARM64 URL and SHA
-          sed -i "/on_linux do/,/end/ {
-            /if Hardware::CPU.arm?/,/end/ {
-              /if Hardware::CPU.arm?/! {
-                s|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/v.*/kexpose-v.*-linux-arm64.tar.gz\"|url \"https://github.com/donsolly/homebrew-kexpose/releases/download/$VERSION/kexpose-$VERSION-linux-arm64.tar.gz\"|
-                s/sha256 \".*\"/sha256 \"$LINUX_ARM64_SHA\"/
-              }
-            }
-          }" Formula/kexpose.rb
+            depends_on "lsof" if OS.linux?
+
+            def install
+              bin.install "kexpose"
+            end
+
+            def caveats
+              <<~EOS
+                kexpose requires:
+                - Access to a Kubernetes cluster with valid kubeconfig
+                - lsof for port scanning
+                  macOS: pre-installed
+                  Linux: install with your package manager (apt install lsof, yum install lsof, etc.)
+
+                Run 'kexpose doctor' to check your system configuration.
+
+                Configuration: ~/.kexpose/
+                Logs: ~/.kexpose/logs/kexpose.log
+              EOS
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/kexpose --version")
+              system "#{bin}/kexpose", "doctor"
+            end
+          end
+          EOF
 
           echo "Updated Formula/kexpose.rb with version $VERSION_NUM"
           cat Formula/kexpose.rb
@@ -178,6 +196,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/kexpose.rb
+          git add -A Formula
           git commit -m "chore: update kexpose.rb formula to ${{ needs.release.outputs.version }}" || echo "No changes to commit"
           git push origin main
